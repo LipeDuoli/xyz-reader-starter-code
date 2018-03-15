@@ -3,18 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="4dp"
-    android:layout_marginLeft="4dp"
-    android:layout_marginRight="4dp"
-    android:layout_marginTop="4dp"
+    android:layout_margin="@dimen/article_card_margin"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?selectableItemBackground"
-    app:cardCornerRadius="4dp">
+    app:cardCornerRadius="4dp"
+    app:cardElevation="2dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="180dp">
+        android:layout_height="@dimen/article_card_height">
 
         <com.android.volley.toolbox.NetworkImageView
             android:id="@+id/thumbnail"
@@ -23,45 +21,36 @@
             android:background="@color/photo_placeholder"
             android:scaleType="centerCrop" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/photo_scrim_botton_top" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="#46000000"
             android:orientation="vertical"
             android:paddingBottom="8dp"
-            android:paddingTop="8dp">
+            android:paddingLeft="@dimen/article_card_title_padding"
+            android:paddingRight="@dimen/article_card_title_padding">
 
             <TextView
                 android:id="@+id/article_title"
-                style="@style/TextAppearance.AppCompat.Title"
+                style="@style/Article.ScrimText.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-light"
-                android:maxLines="1"
-                android:paddingBottom="4dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:textColor="@color/article_title"
-                android:textStyle="italic"
+                android:paddingBottom="@dimen/article_card_title_space"
                 tools:text="Title" />
 
             <TextView
                 android:id="@+id/article_subtitle"
-                style="@style/TextAppearance.AppCompat.Caption"
-                android:textStyle="italic"
+                style="@style/Article.ScrimText.Subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:textColor="@color/article_title"
-                tools:text="Feb 12, 2004\nby Cory" />
+                tools:text="Feb 12, 2004 by Cory" />
 
         </LinearLayout>
-
 
     </FrameLayout>
 

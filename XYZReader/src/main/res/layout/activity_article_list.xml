@@ -1,8 +1,8 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical">
 
     <android.support.design.widget.AppBarLayout
@@ -15,6 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
+            app:elevation="@dimen/toolbar_elevation"
             app:popupTheme="@style/Theme.Bacon.PopupOverlay">
 
             <ImageView
@@ -37,11 +38,10 @@
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingLeft="@dimen/list_side_margin"
-            android:paddingRight="@dimen/list_side_margin"
+            android:clipToPadding="true"
+            android:padding="@dimen/list_side_margin"
             android:scrollbarStyle="insideOverlay"
-            tools:listitem="@layout/list_item_article"/>
+            tools:listitem="@layout/list_item_article" />
 
     </android.support.v4.widget.SwipeRefreshLayout>
 

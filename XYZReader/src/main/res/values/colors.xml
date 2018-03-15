@@ -23,5 +23,6 @@
     <color name="theme_primary_light">#6abf69</color>
     <color name="theme_accent">#ff5252</color>
     <color name="ltgray">#ffe0e0e0</color>
-    <color name="article_title">#eeeeee</color>
+
+    <color name="article_card_title">#eeeeee</color>
 </resources>
