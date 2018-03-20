@@ -1,180 +1,176 @@
 package com.example.xyzreader.ui;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.annotation.TargetApi;
 import android.app.LoaderManager;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v13.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
-import android.util.TypedValue;
+import android.support.v4.app.ShareCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
+import android.text.Html;
+import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowInsets;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 
-/**
- * An activity representing a single Article detail screen, letting you swipe between articles.
- */
-public class ArticleDetailActivity extends ActionBarActivity
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+public class ArticleDetailActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String TAG = "ArticleDetailActivity";
+
     private Cursor mCursor;
-    private long mStartId;
+    private long mItemId;
 
-    private long mSelectedItemId;
-    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
-    private int mTopInset;
+    private ImageView mPhotoView;
+    private Palette generatedPallet;
+    private Toolbar mToolBar;
 
-    private ViewPager mPager;
-    private MyPagerAdapter mPagerAdapter;
-    private View mUpButtonContainer;
-    private View mUpButton;
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
+    // Use default locale format
+    private SimpleDateFormat outputFormat = new SimpleDateFormat();
+    // Most time functions can only handle 1902 - 2037
+    private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        }
         setContentView(R.layout.activity_article_detail);
+
+        if (getIntent() != null && getIntent().getData() != null) {
+            mItemId = ItemsContract.Items.getItemId(getIntent().getData());
+        }
 
         getLoaderManager().initLoader(0, null, this);
 
-        mPagerAdapter = new MyPagerAdapter(getFragmentManager());
-        mPager = (ViewPager) findViewById(R.id.pager);
-        mPager.setAdapter(mPagerAdapter);
-        mPager.setPageMargin((int) TypedValue
-                .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
-        mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
+        mPhotoView = (ImageView) findViewById(R.id.photo);
 
-        mPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-                mUpButton.animate()
-                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
-                        .setDuration(300);
-            }
+        mToolBar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolBar);
 
-            @Override
-            public void onPageSelected(int position) {
-                if (mCursor != null) {
-                    mCursor.moveToPosition(position);
-                }
-                mSelectedItemId = mCursor.getLong(ArticleLoader.Query._ID);
-                updateUpButtonPosition();
-            }
-        });
-
-        mUpButtonContainer = findViewById(R.id.up_container);
-
-        mUpButton = findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.share_fab).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onSupportNavigateUp();
+                startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(ArticleDetailActivity.this)
+                        .setType("text/plain")
+                        .setText("Some sample text")
+                        .getIntent(), getString(R.string.action_share)));
             }
         });
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-                @Override
-                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
-                    view.onApplyWindowInsets(windowInsets);
-                    mTopInset = windowInsets.getSystemWindowInsetTop();
-                    mUpButtonContainer.setTranslationY(mTopInset);
-                    updateUpButtonPosition();
-                    return windowInsets;
-                }
-            });
-        }
+        bindViews();
+    }
 
-        if (savedInstanceState == null) {
-            if (getIntent() != null && getIntent().getData() != null) {
-                mStartId = ItemsContract.Items.getItemId(getIntent().getData());
-                mSelectedItemId = mStartId;
+    private void bindViews() {
+        TextView titleView = (TextView) findViewById(R.id.article_title);
+        TextView bylineView = (TextView) findViewById(R.id.article_byline);
+        TextView bodyView = (TextView) findViewById(R.id.article_body);
+
+        if (mCursor != null) {
+            titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
+            Date publishedDate = parsePublishedDate();
+            if (!publishedDate.before(START_OF_EPOCH.getTime())) {
+                bylineView.setText(Html.fromHtml(
+                        DateUtils.getRelativeTimeSpanString(
+                                publishedDate.getTime(),
+                                System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+                                DateUtils.FORMAT_ABBREV_ALL).toString()
+                                + " by <font color='#ffffff'>"
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "</font>"));
+            } else {
+                // If date is before 1902, just show the string
+                bylineView.setText(Html.fromHtml(
+                        outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "</font>"));
             }
+
+            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY)
+                    .replaceAll("(\r\n)", " ")));
+            ImageLoaderHelper.getInstance(this).getImageLoader()
+                    .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
+                        @Override
+                        public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
+                            Bitmap bitmap = imageContainer.getBitmap();
+                            if (bitmap != null) {
+                                generatedPallet = Palette.from(bitmap).generate();
+                                mPhotoView.setImageBitmap(imageContainer.getBitmap());
+                                updateToolBarColor();
+                            }
+                        }
+
+                        @Override
+                        public void onErrorResponse(VolleyError volleyError) {
+
+                        }
+                    });
+        }
+    }
+
+    private void updateToolBarColor() {
+        Palette.Swatch mutedSwatch = generatedPallet.getMutedSwatch();
+        if (mutedSwatch != null) {
+            mToolBar.setBackgroundColor(mutedSwatch.getRgb());
+            mToolBar.setTitleTextColor(mutedSwatch.getTitleTextColor());
+        }
+        updateStatusBarColor();
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void updateStatusBarColor() {
+        Palette.Swatch darkMutedSwatch = generatedPallet.getDarkMutedSwatch();
+        if (darkMutedSwatch != null) {
+            getWindow().setStatusBarColor(darkMutedSwatch.getRgb());
+        }
+    }
+
+    private Date parsePublishedDate() {
+        try {
+            String date = mCursor.getString(ArticleLoader.Query.PUBLISHED_DATE);
+            return dateFormat.parse(date);
+        } catch (ParseException ex) {
+            Log.e(TAG, ex.getMessage());
+            Log.i(TAG, "passing today's date");
+            return new Date();
         }
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return ArticleLoader.newAllArticlesInstance(this);
+        return ArticleLoader.newInstanceForItemId(this, mItemId);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         mCursor = cursor;
-        mPagerAdapter.notifyDataSetChanged();
-
-        // Select the start ID
-        if (mStartId > 0) {
-            mCursor.moveToFirst();
-            // TODO: optimize
-            while (!mCursor.isAfterLast()) {
-                if (mCursor.getLong(ArticleLoader.Query._ID) == mStartId) {
-                    final int position = mCursor.getPosition();
-                    mPager.setCurrentItem(position, false);
-                    break;
-                }
-                mCursor.moveToNext();
-            }
-            mStartId = 0;
+        if (mCursor != null && !mCursor.moveToFirst()) {
+            Log.e(TAG, "Error reading item detail cursor");
+            mCursor.close();
+            mCursor = null;
         }
+        bindViews();
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
         mCursor = null;
-        mPagerAdapter.notifyDataSetChanged();
-    }
-
-    public void onUpButtonFloorChanged(long itemId, ArticleDetailFragment fragment) {
-        if (itemId == mSelectedItemId) {
-            mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
-            updateUpButtonPosition();
-        }
-    }
-
-    private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
-        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
-    }
-
-    private class MyPagerAdapter extends FragmentStatePagerAdapter {
-        public MyPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public void setPrimaryItem(ViewGroup container, int position, Object object) {
-            super.setPrimaryItem(container, position, object);
-            ArticleDetailFragment fragment = (ArticleDetailFragment) object;
-            if (fragment != null) {
-                mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
-                updateUpButtonPosition();
-            }
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            mCursor.moveToPosition(position);
-            return ArticleDetailFragment.newInstance(mCursor.getLong(ArticleLoader.Query._ID));
-        }
-
-        @Override
-        public int getCount() {
-            return (mCursor != null) ? mCursor.getCount() : 0;
-        }
+        bindViews();
     }
 }

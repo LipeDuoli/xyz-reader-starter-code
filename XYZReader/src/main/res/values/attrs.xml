@@ -2,4 +2,6 @@
     <declare-styleable name="DrawInsetsFrameLayout">
         <attr name="insetBackground" format="color|reference" />
     </declare-styleable>
+    <item name="match_parent" type="dimen">-1</item>
+    <item name="wrap_content" type="dimen">-2</item>
 </resources>
