@@ -8,14 +8,13 @@
     <dimen name="article_card_title_space">4dp</dimen>
 
     <!-- detail -->
-    <dimen name="toolbar_width">@dimen/match_parent</dimen>
-    <dimen name="detail_title_text_size">32sp</dimen>
-    <dimen name="detail_body_text_size">22sp</dimen>
     <item name="detail_body_line_spacing_multiplier" format="float" type="fraction">1.25</item>
 
     <dimen name="fab_elevation">6dp</dimen>
     <dimen name="fab_press_translation_z">12dp</dimen>
     <dimen name="fab_margin">24dp</dimen>
     <dimen name="detail_backdrop_height">200dp</dimen>
+    <dimen name="detail_card_top_margin">48dp</dimen>
+    <dimen name="detail_inner_top_margin">8dp</dimen>
 
 </resources>

@@ -10,7 +10,6 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
         <android.support.design.widget.CollapsingToolbarLayout
-            android:id="@+id/collapsing_toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:expandedTitleMarginEnd="64dp"
@@ -29,7 +28,6 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.widget.NestedScrollView
-        android:id="@+id/scrollview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbarStyle="insideOverlay"
@@ -37,11 +35,10 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <android.support.v7.widget.CardView
-            android:id="@+id/article_body_container"
             android:layout_width="@dimen/detail_card_max_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="@dimen/detail_card_top_margin"
             android:orientation="vertical"
             app:elevation="2dp">
 
@@ -51,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/detail_inner_horiz_margin"
                 android:layout_marginRight="@dimen/detail_inner_horiz_margin"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/detail_inner_top_margin"
                 android:lineSpacingMultiplier="@fraction/detail_body_line_spacing_multiplier"
                 android:paddingBottom="@dimen/detail_body_bottom_margin"
                 android:textColorLink="@color/theme_accent" />
@@ -71,7 +68,6 @@
         app:navigationIcon="@drawable/ic_arrow_back">
 
         <LinearLayout
-            android:id="@+id/toolbar_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="bottom"
@@ -88,14 +84,14 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:paddingBottom="@dimen/detail_metabar_title_bottom_padding"
-                android:textColor="#fff" />
+                android:textColor="@color/toolbar_title" />
 
             <TextView
                 android:id="@+id/article_byline"
                 style="@style/TextAppearance.AppCompat.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#8fff" />
+                android:textColor="@color/toolbar_subtitle" />
         </LinearLayout>
 
     </android.support.v7.widget.Toolbar>
